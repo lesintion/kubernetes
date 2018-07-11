@@ -1,0 +1,31 @@
+#!/bin/bash
+
+# Change these four parameters
+AKS_PERS_STORAGE_ACCOUNT_NAME=k8swlazureeastus
+AKS_PERS_RESOURCE_GROUP=MC_k8s_wlazure_eastus
+AKS_PERS_LOCATION=eastus
+AKS_PERS_SHARE_NAME=wlazure-azure-file
+
+# Create the Resource Group
+#az group create --name $AKS_PERS_RESOURCE_GROUP --location $AKS_PERS_LOCATION
+
+# Create the storage account
+az storage account create -n k8s-wlazure-eastus -g MC_k8s_wlazure_eastus -l eastus --sku Standard_LRS 
+
+# Export the connection string as an environment variable, this is used when creating the Azure file share
+export AZURE_STORAGE_CONNECTION_STRING=`az storage account show-connection-string -n $AKS_PERS_STORAGE_ACCOUNT_NAME -g $AKS_PERS_RESOURCE_GROUP -o tsv`
+az storage account show-connection-string -n k8swlazureeastus -g MC_k8s_wlazure_eastus -o tsv
+# Create the file share
+az storage share create -n wlazure-azure-file --connection-string DefaultEndpointsProtocol=https;EndpointSuffix=core.windows.net;AccountName=k8swlazureeastus;AccountKey=0Mb4noEV0RBlZFo++0DmaeQgUyQ/8+YbZhxQNWmwI2LZWpjyDiP+1gavJwKxJQJgvzTCpi3i1+nufW+ZkMClPg==
+
+# Get storage account key
+STORAGE_KEY=$(az storage account keys list --resource-group $AKS_PERS_RESOURCE_GROUP --account-name $AKS_PERS_STORAGE_ACCOUNT_NAME --query "[0].value" -o tsv)
+
+az storage account keys list --resource-group MC_k8s_wlazure_eastus --account-name k8swlazureeastus --query "[0].value" -o tsv
+
+
+kubectl create secret generic azure-secret --from-literal=azurestorageaccountname=k8swlazureeastus --from-literal=azurestorageaccountkey=0Mb4noEV0RBlZFo++0DmaeQgUyQ/8+YbZhxQNWmwI2LZWpjyDiP+1gavJwKxJQJgvzTCpi3i1+nufW+ZkMClPg==
+
+# Echo storage account name and key
+echo Storage account name: $AKS_PERS_STORAGE_ACCOUNT_NAME
+echo Storage account key: $STORAGE_KEY

@@ -1,0 +1,5 @@
+az account list
+az group create --name k8s --location eastus
+az aks create --resource-group k8s --name wlazure --node-count 3 --generate-ssh-keys
+az aks get-credentials -n wlazure -g k8s
+az aks upgrade -y
